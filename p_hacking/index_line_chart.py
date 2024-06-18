@@ -6,7 +6,6 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import plotly.graph_objects as go
 
 rc = {'figure.figsize': (9.6, 5.4),          # Set figure ratio to be 16:9
       'axes.facecolor': 'white',             # Remove background colour
@@ -100,23 +99,6 @@ def buffett():
 
 def adh2013():
     """Replicate Figure 1 in Autor et al. (AER 2013) and redo the same in a longer time frame"""
-    # Pure replication of the original figure
-    df = pd.read_stata('rawdata/figure1_data.dta')
-    fig, ax = plt.subplots(figsize=(5.4, 5.4))
-    l1 = ax.plot(df['year'], df['impr'], label='China import penetration ratio', color='#000080')
-    ax2 = ax.twinx()
-    l2 = ax2.plot(df['year'], df['cpsmanufemppop'], label='Manufacturing employment/population',
-                  color='#800000', linestyle='dashed')
-    ax.set_ylabel('Import penetration')
-    ax2.set_ylabel('Manufacturing emp./pop.', rotation=270, labelpad=20)
-    ax.set_yticks(np.arange(0, 0.06, 0.01))
-    ax2.set_yticks(np.arange(0.08, 0.16, 0.02))
-    ax2.grid(False)
-    ax.set_xticks(range(1987, 2009, 2))
-    ax.legend(l1 + l2, [i.get_label() for i in l1 + l2], loc='upper center')
-    plt.tight_layout()
-    fig.savefig('figure/adh2013.svg', bbox_inches='tight')
-
     # Build our own data, from raw sources
     pop = pd.read_csv('rawdata/CLF16OV.csv')  # CLF16OV: civilian labour force (persons >= 16)
     manu = pd.read_csv('rawdata/MANEMP.csv')  # MANEMP: all employees, manufacturing
@@ -159,7 +141,7 @@ def adh2013():
     penetration.rename(columns={'DATE': 'date'}, inplace=True)
 
     # Plot our own data, same time frame
-    fig, ax = plt.subplots(figsize=(5.4, 5.4))
+    fig, ax = plt.subplots(figsize=(6, 4.5))
     temp = penetration[(penetration['date'].dt.year >= 1987)
                        & (penetration['date'].dt.year <= 2007)]
     l1 = ax.plot(temp['date'], temp['penetration'], label='China import penetration ratio',
@@ -175,7 +157,8 @@ def adh2013():
     ax2.grid(False)
     ax.set_xticks(pd.date_range('1987-01-01', '2008-01-01', freq='2YS-JUN', inclusive='left'))
     ax.xaxis.set_major_formatter(mpl.dates.DateFormatter('%Y'))
-    ax.legend(l1 + l2, [i.get_label() for i in l1 + l2], loc='upper center')
+    ax.tick_params(axis='x', labelrotation=45)
+    ax.legend(l1 + l2, [i.get_label() for i in l1 + l2], loc=(0.2, 0.88), fontsize=9)
     plt.tight_layout()
     fig.savefig('figure/adh2013_own.svg', bbox_inches='tight')
 
