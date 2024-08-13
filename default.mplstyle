@@ -1,0 +1,9 @@
+figure.figsize: 9.6, 5.4
+axes.facecolor: white
+axes.grid: True
+axes.edgecolor: 0
+axes.linewidth: 0.7
+axes.axisbelow: True
+grid.color: 0.9
+font.size: 12
+mathtext.fontset: cm
