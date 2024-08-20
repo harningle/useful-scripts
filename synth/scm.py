@@ -120,10 +120,6 @@ def plot_timing():
     ax.set_yscale('log')
     ax.set_yticks([10, 100, 1000, 10000], labels=['10ms', '100ms', '1s', '10s'])
     ax.set_ylabel('Time')
-
-    # Add legends
-    handles = [mpatches.Patch(color=colours[i], label=col) for i, col in enumerate(df.columns)]
-    ax.legend(handles=handles, loc='upper right')
     plt.tight_layout()
     plt.savefig('figures/timing.svg', bbox_inches='tight')
     pass
