@@ -22,17 +22,6 @@ export delimited "data/stata_synth.csv", delimit(",") replace
 erase "data/stata_synth.dta"
 restore
 
-// Nested optimisation
-preserve
-synth cigsale $covariates, trunit(3) trperiod(1989) nested ///
-    customV(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1) ///
-    keep("data/stata_synth.dta") replace
-use "data/stata_synth.dta", clear    // save in .csv, so git is happy
-compress
-export delimited "data/stata_synth_nested.csv", delimit(",") replace
-erase "data/stata_synth.dta"
-restore
-
 
 /* Benchmark ******************************************************************/
 // California smoking data
@@ -43,10 +32,10 @@ frame timing {
     gen stata = .
 }
 _dots 0, reps(100)
-forvalues i = 1/700 {
+forvalues i = 1/1000 {
     timer clear
     timer on 1
-    cap synth cigsale $covariates, trunit(3) trperiod(1989) nested ///
+    cap synth cigsale $covariates, trunit(3) trperiod(1989) ///
         customV(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1) ///
         keep("data/stata_synth.dta") replace
     if (_rc == 0) {

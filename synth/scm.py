@@ -23,6 +23,13 @@ def pre_process():
         .set_index(['state', 'year']) \
         .unstack(level=0) \
         .stack(level=0, future_stack=True)
+
+    # Normalise so each row has unit variance
+    temp = pre.values
+    avg = temp.mean(axis=1, keepdims=True)
+    std_dev = temp.std(axis=1, keepdims=True)
+    temp = (temp - avg) / std_dev
+    pre = pd.DataFrame(temp, index=pre.index, columns=pre.columns)
     X_0 = pre['California'].values
     X_1 = pre.drop(columns='California').values
     return X_0, X_1
@@ -68,14 +75,13 @@ def scm_cvxpy(X_0, X_1):
     return w.value
 
 
-def plot_weights(nested: bool = False):
+def plot_weights():
     """Plot the optimal weights from different implementations
 
     :param nested: Whether to use results from Stata's nested optimisation. Default is no
     """
     # Load the SCM results
-    suffix = '_nested' if nested else ''
-    stata = pd.read_csv(f'data/stata_synth{suffix}.csv', usecols=['_Co_Number', '_W_Weight'])
+    stata = pd.read_csv(f'data/stata_synth.csv', usecols=['_Co_Number', '_W_Weight'])
     stata.columns = ['state', 'stata']
     python = pd.read_csv('data/python_synth.csv')
     df = pd.merge(stata, python, left_index=True, right_index=True)
@@ -99,7 +105,7 @@ def plot_weights(nested: bool = False):
     ax[1].set_xticks(df['x'], labels=df['state'], rotation=90)
     plt.tight_layout()
     os.makedirs('figures', exist_ok=True)
-    plt.savefig(f'figures/weights{suffix}.svg', bbox_inches='tight')
+    plt.savefig(f'figures/weights.svg', bbox_inches='tight')
     pass
 
 
@@ -118,7 +124,7 @@ def plot_timing():
     # Add labels
     ax.set_xticks(range(1, 5), labels=['Stata', 'SciPy', 'SciPy (with Jacobian)', 'CVXPY'])
     ax.set_yscale('log')
-    ax.set_yticks([10, 100, 1000, 10000], labels=['10ms', '100ms', '1s', '10s'])
+    ax.set_yticks([10, 30, 100, 300, 1000], labels=['10ms', '30ms', '100ms', '300ms', '1s'])
     ax.set_ylabel('Time')
     plt.tight_layout()
     plt.savefig('figures/timing.svg', bbox_inches='tight')
@@ -132,8 +138,7 @@ def main():
     w_cvxpy = scm_cvxpy(X_0, X_1)
     python = pd.DataFrame({'scipy': w_scipy, 'cvxpy': w_cvxpy})
     python.to_csv('data/python_synth.csv', index=False)
-    plot_weights(nested=False)
-    plot_weights(nested=True)
+    plot_weights()
 
     # Speed benchmark
     time_scipy = []
