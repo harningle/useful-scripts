@@ -51,3 +51,33 @@ frame timing {
     export delimited "data/stata_timing.csv", delimit(",") replace
 }
 clear all
+
+
+/* For post 2 *****************************************************************/
+// Get loss and weights so can compare with Python
+clear all
+use "https://github.com/microsoft/SparseSC/raw/master/replication/smoking.dta"
+xtset state year
+synth cigsale beer(1984(1)1988) lnincome retprice age15to24 cigsale(1988) ///
+      cigsale(1980) cigsale(1975), trunit(3) trperiod(1989) nested allopt
+clear
+mat v = vecdiag(e(V_matrix))
+svmat v, names(v)
+xpose, clear
+svmat e(W_weights), names(w)
+drop w1
+ren v1 v
+ren w2 w
+export delimited "data/stata_synth_nested.csv", delimit(",") replace
+
+// Time
+forvalues i = 1/10 {
+    timeit 1: synth cigsale beer(1984(1)1988) lnincome retprice age15to24 ///
+              cigsale(1988) cigsale(1980) cigsale(1975), tru(3) trp(1989)
+}
+timer list
+local time = r(t1) / 10
+clear all
+insobs 1
+gen time = `time'
+export delimited "data/stata_time_nested.csv", novar replace

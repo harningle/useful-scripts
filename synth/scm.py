@@ -76,10 +76,7 @@ def scm_cvxpy(X_0, X_1):
 
 
 def plot_weights():
-    """Plot the optimal weights from different implementations
-
-    :param nested: Whether to use results from Stata's nested optimisation. Default is no
-    """
+    """Plot the optimal weights from different implementations"""
     # Load the SCM results
     stata = pd.read_csv(f'data/stata_synth.csv', usecols=['_Co_Number', '_W_Weight'])
     stata.columns = ['state', 'stata']
