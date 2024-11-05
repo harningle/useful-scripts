@@ -12,7 +12,7 @@ n = int(sys.argv[1])
 blas = np.show_config(mode='dicts')['Build Dependencies']['blas']['name'].lower()
 if 'mkl' in blas:
     lib = 'mkl'
-elif 'openblas' in blas:
+elif 'blas' in blas:
     lib = 'openblas'
 else:
     raise ValueError(f'Unknown BLAS: {blas}')
@@ -74,7 +74,7 @@ def plot():
     ax2.set_yticks(ax.get_yticks(), labels=[f'{i / 20:.1f}' for i in ax.get_yticks()])
     ax2.set_ylabel('Time (s), for Cholesky decomposition')
     ax2.grid(False)
-    ax.legend(loc='upper left')
+    ax.legend(loc='upper right')
     plt.tight_layout()
     plt.savefig('figures/benchmark_decomposition.svg', bbox_inches='tight')
     return
@@ -93,7 +93,7 @@ def plot():
     ax.scatter(mkl.values(), mkl.keys(), color='#00285A', label='MKL')
     ax.axvline(1, color='#44A8FC', linestyle='dashed')
     ax.annotate(f'{l2_norm:.1f}',
-                xy=(max(mkl.values()) * 0.87, -1), xytext=(max(mkl.values()) * 0.97, -1),
+                xy=(1.1, -1), xytext=(1.3, -1),
                 arrowprops=dict(arrowstyle= '<-', color='#00285A', lw=1.5),
                 color='#00285A', va='center')  # Use arrow to mark the outlier
     text = ax.text(1.02, 0.2, 'MKL ', color='#00285A',
@@ -104,8 +104,8 @@ def plot():
                        rotation='vertical', color='#44A8FC')
     ax.annotate('MKL faster', xy=(0.5, -0.5), xytext=(0.5, -0.5), color='#00285A',
                 va='center', ha='center')
-    ax.annotate('OpenBLAS faster', xy=(1.3, 5.5), xytext=(1.3, 5.5), color='#44A8FC',
-                va='center', ha='center')
+    ax.annotate('OpenBLAS faster', xy=(1.06, 5.5), xytext=(1.06, 5.5), color='#44A8FC',
+                va='center', ha='left')
     yticks = ax.get_yticks()
     ax.set_yticks(yticks + [-1],
                   labels=['Matrix-vector multiplication', 'Matrix-matrix multiplication',
@@ -113,6 +113,7 @@ def plot():
                           'SVD decomposition', 'QR decomposition', 'Cholesky decomposition',
                           'Vector $l^2$ norm'])
     ax.set_ylim(ax.get_ylim()[0] - 0.35, ax.get_ylim()[1])
+    ax.set_xlim(ax.get_xlim()[0], 1.35)
     ax.set_xlabel('MKL speed up factor')
     plt.tight_layout()
     plt.savefig('figures/benchmark_mkl_openblas.svg', bbox_inches='tight')
@@ -122,27 +123,27 @@ def plot():
 def main():
     res = {
         # Matrix-vector multiplication
-        'Mat.-vec. mul.': timeit.timeit('np.dot(X, x)', globals=globals(), number=5),
+        'Mat.-vec. mul.': timeit.timeit('np.dot(X, x)', globals=globals(), number=10),
 
         # Matrix multiplication
-        'Mat. mul.': timeit.timeit('np.dot(X, Y)', globals=globals(), number=5),
+        'Mat. mul.': timeit.timeit('np.dot(X, Y)', globals=globals(), number=10),
 
         # Vec. norm
-        'Vec. norm': timeit.timeit('np.linalg.norm(x)', globals=globals(), number=5),
+        'Vec. norm': timeit.timeit('np.linalg.norm(x)', globals=globals(), number=10),
 
         # Matrix determinant
-        'Mat. det.': timeit.timeit('np.linalg.det(X)', globals=globals(), number=5),
+        'Mat. det.': timeit.timeit('np.linalg.det(X)', globals=globals(), number=10),
 
         # Matrix inverse
-        'Inverse': timeit.timeit('np.linalg.inv(X)', globals=globals(), number=5),
+        'Inverse': timeit.timeit('np.linalg.inv(X)', globals=globals(), number=10),
 
         # Matrix eigenvalues
-        'Eigenvalue': timeit.timeit('np.linalg.eigvals(X)', globals=globals(), number=5),
+        'Eigenvalue': timeit.timeit('np.linalg.eigvals(X)', globals=globals(), number=10),
 
         # Matrix decomposition
-        'SVD': timeit.timeit('np.linalg.svd(X)', globals=globals(), number=5),
-        'QR': timeit.timeit('np.linalg.qr(X)', globals=globals(), number=5),
-        'Cholesky': timeit.timeit('np.linalg.cholesky(X)', globals=globals(), number=5)
+        'SVD': timeit.timeit('np.linalg.svd(X)', globals=globals(), number=10),
+        'QR': timeit.timeit('np.linalg.qr(X)', globals=globals(), number=10),
+        'Cholesky': timeit.timeit('np.linalg.cholesky(X)', globals=globals(), number=10)
     }
     with open(f'data/{lib}.json', 'w') as f:
         json.dump(res, f)
