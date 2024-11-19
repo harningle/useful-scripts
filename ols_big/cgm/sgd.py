@@ -46,10 +46,14 @@ def plot_contour(X: np.ndarray, Y: np.ndarray):
     b = np.stack([b1.ravel(), b2.ravel()], axis=1)
     ssr = np.sum((Y[:, None] - X @ b.T) ** 2, axis=0).reshape(100, 100)
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(6, 6))
     ct = ax.contour(b1, b2, ssr, levels=[980, 990, 1020, 1100, 1200, 1300, 1500],
                     cmap='coolwarm', linewidths=1, alpha=0.9)
     ax.clabel(ct, inline=True)
+    ax.axhline(sol[1], color='#800000', lw=1, ls='--')
+    ax.axvline(sol[0], color='#800000', lw=1, ls='--')
+    ax.scatter([sol[0]], [sol[1]], color='#800000', s=10)
+    ax.set_aspect('equal')
     plt.xlabel(r'$\beta_0$')
     plt.ylabel(r'$\beta_1$')
     plt.tight_layout()
@@ -84,9 +88,14 @@ def gd(
     return bs, losses
 
 
-def plot_gd(X: np.ndarray, Y: np.ndarray, bs: list[np.ndarray], losses: list[float], is_sgd: bool):
+def plot_gd(
+        X: np.ndarray,
+        Y: np.ndarray,
+        bs: list[np.ndarray],
+        losses: list[float],
+        filename: str | os.PathLike
+):
     n_iter = len(losses) - 1
-    is_sgd = 's' if is_sgd else ''
 
     # Plot the trajectory of beta over contours of the loss function
     fig, ax = plt.subplots()
@@ -97,12 +106,16 @@ def plot_gd(X: np.ndarray, Y: np.ndarray, bs: list[np.ndarray], losses: list[flo
                cmap='coolwarm', linewidths=1, alpha=0.9)
     for i in range(n_iter):
         ax.annotate('', bs[i + 1], bs[i],
-                    arrowprops=dict(arrowstyle='->', lw=0.5, color='#000080', mutation_scale=10))
+                    arrowprops=dict(arrowstyle='->', lw=1, color='#000080', mutation_scale=15))
     ax.scatter(*bs.T, color='#000080', s=5)
+    ax.axhline(sol[1], color='#800000', lw=1, ls='--')
+    ax.axvline(sol[0], color='#800000', lw=1, ls='--')
+    ax.scatter([sol[0]], [sol[1]], color='#800000', s=10)
+    ax.set_aspect('equal')
     plt.xlabel(r'$\beta_0$')
     plt.ylabel(r'$\beta_1$')
     plt.tight_layout()
-    plt.savefig(f'figures/{is_sgd}gd_iter_contour.svg', bbox_inches='tight')
+    plt.savefig(f'figures/{filename}_contour.svg', bbox_inches='tight')
 
     # Helper class to plot 3D arrows
     class Arrow3D(FancyArrowPatch):
@@ -141,11 +154,11 @@ def plot_gd(X: np.ndarray, Y: np.ndarray, bs: list[np.ndarray], losses: list[flo
     ax = plot_3d(X, Y, -0.5, 2.5, -2.5, 0.5)
     for i in range(n_iter):
         ax.arrow3D(bs[i][0], bs[i][1], losses[i], bs[i + 1][0] - bs[i][0], bs[i + 1][1] - bs[i][1],
-                   losses[i + 1] - losses[i], mutation_scale=5, arrowstyle='->', color='#000080')
-    ax.plot(*bs.T, losses, color='#000080', lw=1)
+                   losses[i + 1] - losses[i], mutation_scale=8, arrowstyle='->', color='#000080')
+    ax.plot(*bs.T, losses, color='#000080', lw=1.5)
     ax.set_zticks([1000, 3000, 5000, 7000, 9000])
     plt.tight_layout()
-    plt.savefig(f'figures/{is_sgd}gd_iter_3d.svg', bbox_inches=Bbox([[2.4, 0.15], [7.92, 4.85]]))
+    plt.savefig(f'figures/{filename}_3d.svg', bbox_inches=Bbox([[2.4, 0.15], [7.92, 4.85]]))
     return
 
 
@@ -162,13 +175,14 @@ def sgd(
     losses = [None for i in range(n_iter + 1)]
     bs[0] = b
     losses[0] = np.sum((Y - X @ b) ** 2)  # Just for reference. Real SGD not going to do this
-    data = np.hstack([X, Y[:, None]])
-
+    indices = list(range(N))
     rng = np.random.default_rng(seed=42)
+
     for i in range(n_iter):
-        rng.shuffle(data)
+        rng.shuffle(indices)
         for j in range(0, N, batch_size):
-            X_batch, Y_batch = data[j:j + batch_size, :-1], data[j:j + batch_size, -1]
+            X_batch = X[indices[j:j + batch_size]]
+            Y_batch = Y[indices[j:j + batch_size]]
             b -= lr * jac(X_batch, Y_batch, b)
         bs[i + 1] = b
         losses[i + 1] = np.sum((Y - X @ b) ** 2)
@@ -177,13 +191,26 @@ def sgd(
 
 def sd(
         X: np.ndarray, Y: np.ndarray,
-        n_iter: int = 49, lr: float = 0.0005, init_b: tuple[float] = (0, 0)
+        n_iter: int = 49, init_b: tuple[float] = (0, 0)
 ) -> tuple[list[np.ndarray], list[float]]:
     """Steepest descent for linear regression
 
     :return: Tuple of beta estimates and loss values in each step
     """
-    raise NotImplementedError
+    b = np.array(init_b, dtype=float)
+    bs = np.zeros((n_iter + 1, 2))
+    losses = [None for i in range(n_iter + 1)]
+    bs[0] = b
+    losses[0] = np.sum((Y - X @ b) ** 2)
+
+    for i in range(n_iter):
+        grad = jac(X, Y, b)
+        eta = -grad.T @ grad / (2 * grad.T @ X.T @ X @ grad)
+        b += eta * grad
+        bs[i + 1] = b
+        losses[i + 1] = np.sum((Y - X @ b) ** 2)
+
+    return bs, losses
 
 
 def main():
@@ -194,13 +221,15 @@ def main():
 
     # GD
     bs, losses = gd(X, Y)
-    plot_gd(X, Y, bs, losses, is_sgd=False)
+    plot_gd(X, Y, bs, losses, 'gd_iter')
 
     # SGD
     bs, losses = sgd(X, Y)
-    plot_gd(X, Y, bs, losses, is_sgd=True)
+    plot_gd(X, Y, bs, losses, 'sgd_iter')
 
     # Steepest descent
+    bs, losses = sd(X, Y)
+    plot_gd(X, Y, bs, losses, 'sd_iter')
 
 
 if __name__ == '__main__':
