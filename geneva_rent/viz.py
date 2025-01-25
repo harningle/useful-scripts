@@ -170,7 +170,7 @@ def main():
     med = temp.rent.median()
     fig.update_layout(
         margin=dict(t=0, b=50, l=70, r=0),
-        title={'xanchor': 'left', 'x': 0.8, 'yanchor': 'top', 'y': 0.8,
+        title={'xanchor': 'left', 'x': 0.7, 'yanchor': 'top', 'y': 0.8,
                'text': rf'$N = {n}\\\\\text{{mean}} = {avg:.1f}\\\\\text{{median}} = {med:.1f}$'},
         xaxis_title='Monthly rent in 2011',
         yaxis_title='Density',
