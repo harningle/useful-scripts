@@ -131,7 +131,7 @@ def main():
                 {
                     'title': {
                         'xanchor': 'left',
-                        'x': 0.8,
+                        'x': 0.7,
                         'yanchor': 'top',
                         'y': 0.8,
                         'text': rf'$N = {n}\\\\\text{{mean}} = {avg:.1f}\\\\' \
