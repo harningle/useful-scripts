@@ -169,8 +169,6 @@ def main():
     avg = temp.rent.mean()
     med = temp.rent.median()
     fig.update_layout(
-        width=800,
-        height=450,
         margin=dict(t=0, b=50, l=70, r=0),
         title={'xanchor': 'left', 'x': 0.8, 'yanchor': 'top', 'y': 0.8,
                'text': rf'$N = {n}\\\\\text{{mean}} = {avg:.1f}\\\\\text{{median}} = {med:.1f}$'},
