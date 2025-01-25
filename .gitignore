@@ -165,3 +165,7 @@ cython_debug/
 *.dbf
 *.tiff
 *.tif
+
+# Data cannot be shared
+geneva_rent/ipums.csv
+
