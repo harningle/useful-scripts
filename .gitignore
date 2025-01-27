@@ -169,3 +169,6 @@ cython_debug/
 # Data cannot be shared
 geneva_rent/ipums.csv
 
+# Mac shit
+.DS_Store
+
