@@ -4,6 +4,8 @@ axes.grid: True
 axes.edgecolor: 0
 axes.linewidth: 0.7
 axes.axisbelow: True
+axes.spines.top: False
+axes.spines.right: False
 grid.color: 0.9
 font.size: 12
 mathtext.fontset: cm
