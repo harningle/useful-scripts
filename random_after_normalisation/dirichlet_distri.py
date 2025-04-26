@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 import matplotlib.pyplot as plt
+from matplotlib.transforms import Bbox
 import numpy as np
 
 plt.style.use('../default.mplstyle')
 
-np.random.seed(42)
+np.random.seed(0)
 N = 1000
 
 
@@ -13,7 +14,7 @@ def main():
     arr = np.random.uniform(0, 1, (N, 2))
     arr = arr / np.sum(arr, axis=1)[:, np.newaxis]
 
-    # Scatter plot
+    # Scatter plot of the resulting points
     fig, ax = plt.subplots()
     ax.plot(arr[:, 0], arr[:, 1], 'o', color='#000080', alpha=0.02)
     ax.set_xlabel('$x_0$')
@@ -21,6 +22,23 @@ def main():
     ax.set_aspect('equal')
     plt.tight_layout()
     plt.savefig('figures/uniform_wrong.svg', bbox_inches='tight')
+
+    # Theoretical and empirical c.d.f. of the points in 2D case
+    arr = np.random.uniform(0, 1, (N, 2))
+    arr = arr / np.sum(arr, axis=1)[:, np.newaxis]
+    xs = np.linspace(0, 1, 100)
+    ys = np.zeros_like(xs)
+    ys[xs < 0.5] = xs[xs < 0.5] / (2 - 2 * xs[xs < 0.5])
+    ys[xs >= 0.5] = (3 * xs[xs >= 0.5] - 1) / (2 * xs[xs >= 0.5])
+    fig, ax = plt.subplots()
+    ax.plot(xs, ys, color='#000080', label='c.d.f.')
+    ax.ecdf(arr[:, 0], color='orange', label='Empirical c.d.f.')
+    ax.set_xlabel('$x_0$')
+    ax.set_ylabel(r'$F_{X_0}(X_0\leq x_0)$')
+    ax.legend()
+    ax.set_xlim(0, 1)
+    plt.tight_layout()
+    plt.savefig('figures/uniform_wrong_cdf.svg', bbox_inches='tight')
 
     # 3D case
     arr = np.random.uniform(0, 1, (N * 10, 3))
@@ -34,7 +52,7 @@ def main():
     ax.set_zlabel('$x_2$')
     ax.view_init(30, 45, 0)
     plt.tight_layout()
-    plt.savefig('figures/uniform_wrong_3d.svg', bbox_inches='tight')
+    plt.savefig('figures/uniform_wrong_3d.svg', bbox_inches=Bbox([[1.85, 0.1], [7.3, 4.88]]))
     return
 
 
