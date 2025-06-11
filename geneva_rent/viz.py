@@ -2,7 +2,7 @@
 The input data is freely available at IPUMS:
 https://international.ipums.org/international-action/sample_details/country/ch#ch2011a
 
-The vars. needed for this scripts are:
+The vars. needed for this script are:
 SAMPLE              IPUMS sample identifier
 SERIAL              Household serial number
 HHWT                Household weight

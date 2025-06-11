@@ -172,3 +172,6 @@ geneva_rent/ipums.csv
 # Mac shit
 .DS_Store
 
+# Output files in `pdf_parser_benchmark`
+pdf_parser_benchmark/output
+
