@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Stochastic Gradient Descent for linear regression"""
 import os
+from typing import Optional
 
 import numpy as np
 from matplotlib.patches import FancyArrowPatch
@@ -8,6 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib.transforms import Bbox
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.proj3d import proj_transform
+from scipy.optimize import fsolve
 
 np.random.seed(42)
 
@@ -93,7 +95,8 @@ def plot_gd(
         Y: np.ndarray,
         bs: list[np.ndarray],
         losses: list[float],
-        filename: str | os.PathLike
+        filename: str | os.PathLike,
+        extra_bs: Optional[list[np.ndarray]] = None,
 ):
     n_iter = len(losses) - 1
 
@@ -108,6 +111,14 @@ def plot_gd(
         ax.annotate('', bs[i + 1], bs[i],
                     arrowprops=dict(arrowstyle='->', lw=1, color='#000080', mutation_scale=15))
     ax.scatter(*bs.T, color='#000080', s=5)
+
+    # Plot extra beta estimates if provided
+    if extra_bs is not None:
+        extra_bs = np.array(extra_bs)
+        for i in range(len(extra_bs) - 1):
+            ax.annotate('', extra_bs[i + 1], extra_bs[i],
+                        arrowprops=dict(arrowstyle='->', lw=1, color='orange', mutation_scale=15))
+    ax.plot(*extra_bs.T, color='orange', lw=1.5)
     ax.axhline(sol[1], color='#800000', lw=1, ls='--')
     ax.axvline(sol[0], color='#800000', lw=1, ls='--')
     ax.scatter([sol[0]], [sol[1]], color='#800000', s=10)
@@ -156,6 +167,17 @@ def plot_gd(
         ax.arrow3D(bs[i][0], bs[i][1], losses[i], bs[i + 1][0] - bs[i][0], bs[i + 1][1] - bs[i][1],
                    losses[i + 1] - losses[i], mutation_scale=8, arrowstyle='->', color='#000080')
     ax.plot(*bs.T, losses, color='#000080', lw=1.5)
+
+    # Plot extra beta estimates if provided
+    if extra_bs is not None:
+        for i in range(len(extra_bs) - 1):
+            ax.arrow3D(extra_bs[i][0], extra_bs[i][1], np.sum((Y - X @ extra_bs[i]) ** 2),
+                       extra_bs[i + 1][0] - extra_bs[i][0],
+                       extra_bs[i + 1][1] - extra_bs[i][1],
+                       np.sum((Y - X @ extra_bs[i + 1]) ** 2) - np.sum((Y - X @ extra_bs[i]) ** 2),
+                       mutation_scale=8,
+                       arrowstyle='->',
+                       color='orange')
     ax.set_zticks([1000, 3000, 5000, 7000, 9000])
     plt.tight_layout()
     plt.savefig(f'figures/{filename}_3d.svg', bbox_inches=Bbox([[2.4, 0.15], [7.92, 4.85]]))
@@ -230,6 +252,7 @@ def main():
     # Steepest descent
     bs, losses = sd(X, Y)
     plot_gd(X, Y, bs, losses, 'sd_iter')
+    return
 
 
 if __name__ == '__main__':

@@ -5,6 +5,7 @@ Dependencies:
     * pymupdf4llm
     * docling
     * magic-pdf
+    * marker
     * markitdown
     * mistralai
 """
@@ -22,6 +23,9 @@ from magic_pdf.data.data_reader_writer import FileBasedDataWriter, FileBasedData
 from magic_pdf.data.dataset import PymuDocDataset
 from magic_pdf.model.doc_analyze_by_custom_model import doc_analyze
 from magic_pdf.config.enums import SupportedPdfParseMethod
+from marker.converters.pdf import PdfConverter
+from marker.models import create_model_dict
+from marker.output import text_from_rendered
 from markitdown import MarkItDown
 from mistralai import Mistral
 import pymupdf4llm
@@ -89,6 +93,17 @@ def markitdown_parser(file: str | os.PathLike):
     result = md.convert(file)
     with open(get_output_filename(file, 'markitdown'), 'w', encoding='utf-8') as f:
         f.write(result.text_content)
+    return
+
+
+def marker_parser(file: str | os.PathLike):
+    converter = PdfConverter(artifact_dict=create_model_dict(device='cuda'))
+    rendered = converter(file)
+    text, _, images = text_from_rendered(rendered)
+    with open(get_output_filename(file, 'marker'), 'w', encoding='utf-8') as f:
+        f.write(text)
+    for img_ref, img in images.items():
+        img.save(f'output/{img_ref}')
     return
 
 
@@ -163,6 +178,7 @@ def main():
         # 'docling': docling_parser,
         # 'mineru': mineru_parser,
         # 'markitdown': markitdown_parser,
+        # 'marker': marker_parser,
         # 'mistral': mistral_parser,
         # 'ilyarice': ilyarice_parser
     }
