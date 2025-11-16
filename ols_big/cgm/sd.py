@@ -99,6 +99,15 @@ def plot_gd(
         extra_bs: Optional[list[np.ndarray]] = None,
 ):
     n_iter = len(losses) - 1
+    bs = bs[:n_iter + 1]  # I think some one-off index error in `cgm`... Anyways just plot it
+
+    # Trim the list if already converged
+    for i in range(1, n_iter + 1):
+        if np.allclose(bs[i], sol):
+            n_iter = i
+            bs = bs[:n_iter + 1]
+            losses = losses[:n_iter + 1]
+            break
 
     # Plot the trajectory of beta over contours of the loss function
     fig, ax = plt.subplots()
@@ -118,7 +127,7 @@ def plot_gd(
         for i in range(len(extra_bs) - 1):
             ax.annotate('', extra_bs[i + 1], extra_bs[i],
                         arrowprops=dict(arrowstyle='->', lw=1, color='orange', mutation_scale=15))
-    ax.plot(*extra_bs.T, color='orange', lw=1.5)
+        ax.plot(*extra_bs.T, color='orange', lw=1.5)
     ax.axhline(sol[1], color='#800000', lw=1, ls='--')
     ax.axvline(sol[0], color='#800000', lw=1, ls='--')
     ax.scatter([sol[0]], [sol[1]], color='#800000', s=10)
@@ -212,8 +221,7 @@ def sgd(
 
 
 def sd(
-        X: np.ndarray, Y: np.ndarray,
-        n_iter: int = 49, init_b: tuple[float] = (0, 0)
+        X: np.ndarray, Y: np.ndarray, n_iter: int = 49, init_b: tuple[float] = (0, 0)
 ) -> tuple[list[np.ndarray], list[float]]:
     """Steepest descent for linear regression
 
@@ -221,7 +229,7 @@ def sd(
     """
     b = np.array(init_b, dtype=float)
     bs = np.zeros((n_iter + 1, 2))
-    losses = [None for i in range(n_iter + 1)]
+    losses = [None for _ in range(n_iter + 1)]
     bs[0] = b
     losses[0] = np.sum((Y - X @ b) ** 2)
 
@@ -231,6 +239,33 @@ def sd(
         b += eta * grad
         bs[i + 1] = b
         losses[i + 1] = np.sum((Y - X @ b) ** 2)
+
+    return bs, losses
+
+
+def cgm(
+        X: np.ndarray, Y: np.ndarray, n_iter: int = 49, init_b: tuple[float] = (0, 0)
+) -> tuple[list[np.ndarray], list[float]]:
+    """Conjugate gradient method for linear regression
+
+    :return: Tuple of beta estimates and loss values in each step
+    """
+    b = np.array(init_b, dtype=float)
+    bs = np.zeros((n_iter + 1, len(init_b)))
+    losses = [None for _ in range(n_iter)]
+    bs[0] = b
+    losses[0] = np.sum((Y - X @ b) ** 2)
+    d = [None for _ in range(n_iter)]  # d[1] is the direction from bs[0] to bs[1]
+    d[1] = jac(X, Y, bs[0])  # First step is just the gradient, so d[1] is the Jacobian at bs[0]
+
+    for i in range(1, n_iter):
+        if d[i] is None:  # Only need to compute from d[2] onwards
+            lambdaa = -(d[i - 1].T @ X.T @ X @ jac(X, Y, bs[i - 1])) \
+                      / (d[i - 1].T @ X.T @ X @ d[i - 1])
+            d[i] = lambdaa * d[i - 1] + jac(X, Y, bs[i - 1])
+        eta = -(d[i].T @ jac(X, Y, bs[i - 1])) / (2 * d[i].T @ X.T @ X @ d[i])
+        bs[i] = bs[i - 1] + eta * d[i]
+        losses[i] = np.sum((Y - X @ bs[i]) ** 2)
 
     return bs, losses
 
@@ -252,6 +287,10 @@ def main():
     # Steepest descent
     bs, losses = sd(X, Y)
     plot_gd(X, Y, bs, losses, 'sd_iter')
+
+    # Conjugate gradient method
+    bs, losses = cgm(X, Y)
+    plot_gd(X, Y, bs, losses, 'cgm_iter')
     return
 
 
