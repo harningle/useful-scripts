@@ -29,12 +29,14 @@ def kde(hist: dict[float, int], n_samples: int = 100, bw: float = 0.25) \
 
 def ridge_plot(x: Sequence,
                density: list[tuple[np.ndarray, np.ndarray]],
-               means: Optional[Sequence[float]] = None):
+               means: Optional[Sequence[float]] = None,
+               mean_below_label: bool = False) -> None:
     """
     :param x: A collection of variables/categories for each ridge plot
     :param density: Density of each `x` variable， as tuples of (x values, density values)
     :param means: Avg. for each `x` variable to be marked on the plot. If provided, density will be
                   coloured according to the means of `x`
+    :param mean_below_label: Whether to put the mean value below the label of each ridge plot
     """
     fig = plt.figure(figsize=(9, 16))
     gs = grid_spec.GridSpec(len(x), 1)
@@ -57,7 +59,10 @@ def ridge_plot(x: Sequence,
         ax.set_yticks([])
         for s in ['top', 'right', 'left', 'bottom']:
             ax.spines[s].set_visible(False)
-        ax.text(0.95 * min_x - 0.05 * max_x, 0, x[i], ha='right')
+        label = x[i]
+        if means and mean_below_label:
+            label += f'\n({list(means)[i]:.0f})'
+        ax.text(0.95 * min_x - 0.05 * max_x, 0, label, ha='right')
 
     gs.update(hspace=-0.7)
     return
