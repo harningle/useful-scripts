@@ -9,3 +9,5 @@ axes.spines.right: False
 grid.color: 0.9
 font.size: 12
 mathtext.fontset: cm
+figure.autolayout: True
+savefig.bbox: tight

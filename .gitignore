@@ -160,14 +160,18 @@ cython_debug/
 .idea/
 */.ipynb_checkpoints/
 
+# VS Code
+.vscode
+
 # GIS files
 *.shp
 *.dbf
 *.tiff
 *.tif
 
-# Data cannot be shared
+# Data cannot be shared or too big
 geneva_rent/ipums.csv
+sbb/data
 
 # Mac shit
 .DS_Store
